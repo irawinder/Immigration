@@ -1,5 +1,8 @@
+World synthetic;
+
 void setup() {
-  World synthetic = new World();
+  synthetic = new World();
+  synthetic.printSummary();
 }
 
 void draw() {
