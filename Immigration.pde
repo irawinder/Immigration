@@ -3,15 +3,19 @@ World synthetic;
 void setup() {
   size(1200, 1000);
   initWorld(500);
-
+  
+  background(0);
+  synthetic.display();
+  
+  noLoop();
 }
 
 void draw() {
   
   background(0);
-  
-  synthetic.update();
   synthetic.display();
+  
+  noLoop();
 }
 
 void initWorld(int iterations) {
@@ -30,6 +34,7 @@ void keyPressed() {
   switch(key) {
     case 'r': // reset
       initWorld(500);
+      loop();
       break;
   }  
 }
