@@ -15,7 +15,7 @@
  *
  */
 
-float particleVelocity = 1;
+import java.util.*;
 
 String[] cultureNames = {
   "Xenu",
@@ -43,8 +43,6 @@ String[] nationNames = {
   "Dovania"
 };
 
-import java.util.*;
-
 class World {
   
   // Global constants:
@@ -67,10 +65,12 @@ class World {
   ArrayList<PVector> loc, nameLoc;
   ArrayList<Integer> hue;
   float innerCircle, outerCircle;
+  float particleVelocity = 0.1;
   
   World() {
     setupWorld();
     setupCanvas();
+    preRun(500);
   }
   
   void setupWorld() {
@@ -130,6 +130,17 @@ class World {
     }
     
   }
+  
+  void preRun(int iterations) {
+    // Pre-Run the script before displaying
+    particleVelocity = 10.0;
+    // Allows Agents to reach equilibrium before displaying
+    for(int i=0; i<iterations; i++) {
+      particleVelocity -= 9.9 / iterations;
+      update();
+    }
+    particleVelocity = 0.1;
+  }
     
   void calculateStats() {
     
@@ -178,6 +189,10 @@ class World {
     textSize(16);
     text("Synthetic Nations", 20, 20);
     text("With Sub-Populations", 20, 40);
+    
+    textAlign(RIGHT,TOP);
+    textSize(16);
+    text("Press 'r' to refresh", width-20, 20);
     
     // Draw Culture Legend
     int margin = 20;
