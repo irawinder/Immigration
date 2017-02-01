@@ -32,7 +32,7 @@ String[] cultureNames = {
 
 String[] nationNames = {
   "Alphax",
-  "Betaburg",
+  "Ballerburg",
   "Zetamon",
   "Bigmont",
   "Selion",
@@ -186,9 +186,10 @@ class World {
     // Title
     fill(255);
     textAlign(LEFT, TOP);
-    textSize(16);
+    textSize(20);
     text("Synthetic Nations", 20, 20);
-    text("With Sub-Populations", 20, 40);
+    textSize(16);
+    text("Ira Winder, jiw@mit.edu", 20, 50);
     
     textAlign(RIGHT,TOP);
     textSize(16);
@@ -196,7 +197,7 @@ class World {
     
     // Draw Culture Legend
     int margin = 20;
-    int top = 70;
+    int top = 140;
     int textSize = 16;
     int cultureIndex;
     int circleDim = 10;
