@@ -16,13 +16,13 @@
  */
 
 String[] cultureNames = {
+  "Xenu",
+  "Delta",
+  "Tribble",
   "Glorp",
   "Mogwop",
   "Nerb",
   "Talax",
-  "Xenu",
-  "Delta",
-  "Tribble",
   "Kletz",
   "Lazuli",
   "Muggle"
@@ -68,13 +68,11 @@ class World {
   World() {
     setupWorld();
     setupCanvas();
-    
-    calculateStats();
   }
   
   void setupWorld() {
-    int numCultures = int(random(1, cultureNames.length));
-    int numNations = int(random(1, nationNames.length));
+    int numCultures = int(random(3, 5));
+    int numNations = int(random(5, nationNames.length+1));
     
     worldCultures = new ArrayList<Culture>();
     for (int i=0; i<numCultures; i++) {
@@ -87,7 +85,7 @@ class World {
     }
     
     for (int i=0; i<worldNations.size(); i++) {
-      worldNations.get(i).randomSetup( int(random(1,100)) );
+      worldNations.get(i).randomSetup( int( sq( random(1,9) ) ) );
       worldNations.get(i).calculateStats();
     }
     
@@ -96,6 +94,7 @@ class World {
       culturePop.add(0);
     }
     
+    calculateStats();
     printSummary();
   }
   
@@ -103,19 +102,19 @@ class World {
     loc = new ArrayList<PVector>();
     for (int i=0; i<worldNations.size(); i++) {
       float angle = i*(2.0*PI)/worldNations.size();
-      float x = 0.5*width + (0.3*width)*sin(angle);
+      float x = width - 0.5*height + (0.3*height)*sin(angle);
       float y = 0.5*height - (0.3*height)*cos(angle);
       loc.add(new PVector(x, y));
       
       int area = 20;
       for(int j=0; j<worldNations.get(i).citizens.size(); j++) {
-        worldNations.get(i).citizens.get(j).setLocation(int(x + random(-area, area)), int(y + random(-area, area)));
+        worldNations.get(i).citizens.get(j).setLocation(int(x + area*sin(random(0, 2*PI))), int(y + area*cos(random(0, 2*PI))));
       }
     }
     
     hue = new ArrayList<Integer>();
     for (int i=0; i<worldCultures.size(); i++) {
-      hue.add(new Integer(int(i*255.0/worldCultures.size())));
+      hue.add(new Integer(int(i*200.0/worldCultures.size())));
     }
     
   }
@@ -149,35 +148,73 @@ class World {
     
   } // End CalculateStats()
   
+  void update() {
+    // Draw Nations w/ People
+    for (int i=0; i<worldNations.size(); i++) {
+      for (int j=0; j<worldNations.get(i).citizens.size(); j++) {
+        worldNations.get(i).citizens.get(j).update(loc.get(i), worldNations.get(i).citizens); 
+      }
+    } 
+  }
+  
   void display() {
     colorMode(HSB);
     
-    for (int i=0; i<worldNations.size(); i++) {
+    // Title
+    fill(255);
+    textAlign(LEFT, TOP);
+    textSize(16);
+    text("Synthetic Nations", 20, 20);
+    text("With Sub-Populations", 20, 40);
+    
+    // Draw Culture Legend
+    int margin = 20;
+    int textSize = 12;
+    int cultureIndex;
+    textSize(textSize);
+    textAlign(LEFT, CENTER);
+    for (int i=0; i<worldCultures.size(); i++) {
+      fill(255);
+      text(worldCultures.get(i).name, 30 + margin, 70 + margin + 1.75*i*textSize);
       
+      cultureIndex = worldCultures.get(i).index;
+      fill(hue.get(cultureIndex), 200, 255, 200);
+      ellipse(margin, 70 + margin + 1.75*i*textSize, 8, 8);
+    }
+      
+    // Draw Nations w/ People
+    for (int i=0; i<worldNations.size(); i++) {
       float x, y;
       
       // Draw People
       noStroke();
-      int cultureIndex;
       for (int j=0; j<worldNations.get(i).citizens.size(); j++) {
-        worldNations.get(i).citizens.get(j).update(loc.get(i), worldNations.get(i).citizens);
         cultureIndex = worldNations.get(i).citizens.get(j).culture.index;
-        fill(hue.get(cultureIndex), 255, 255, 150);
+        fill(hue.get(cultureIndex), 200, 255, 150);
         x = worldNations.get(i).citizens.get(j).loc.x;
         y = worldNations.get(i).citizens.get(j).loc.y;
         ellipse(x, y, 8, 8);
       }
-      
+    
       // Draw Nation
       x = loc.get(i).x;
       y = loc.get(i).y;
       String name = worldNations.get(i).name;
-      fill(255, 150);
+      String majorityCulture = worldCultures.get(worldNations.get(i).majorityCultureIndex).name;
       textAlign(CENTER, CENTER);
       textSize(16);
+      fill(0, 150);
+      text(name, x+1, y+1);
+      text(name, x-1, y-1);
+      text(name, x+1, y-1);
+      text(name, x-1, y+1);
+      fill(255, 200);
       text(name, x, y);
-      
+//      text(name, x, y - 8);
+//      textSize(12);
+//      text(majorityCulture, x, y + 8);
     }
+    
   } // End display()
   
   void printSummary() {
@@ -331,7 +368,8 @@ class World {
     PVector acc, vel, loc;
     float maxVel = 0.1;
     int repelDist = 10;
-    float repelForce = 1;
+    float repelForce = 500;
+    float attractForce = 0.1;
     
     Persons(boolean immigrant, Culture culture) {
       this.immigrant = immigrant;
@@ -355,7 +393,7 @@ class World {
       sinkForce.setMag(0.5);
       acc.set(sinkForce);
       
-      // Apply Repel Force
+      // Apply Attract and Repel Force
       PVector dist = new PVector();
       for (int i=0; i<crowd.size(); i++) {
         dist.x = loc.x;
@@ -365,7 +403,13 @@ class World {
           dist.setMag(repelForce);
           acc.add(dist);
         }
+        if(culture.index == crowd.get(i).culture.index) {
+          dist.setMag(attractForce);
+          acc.sub(dist);
+        }
       }
+      
+
       
       // Update Velocity, Caps Speed
       vel.add(acc);

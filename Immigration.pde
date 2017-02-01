@@ -1,22 +1,31 @@
 World synthetic;
 
 void setup() {
-  size(500,500);
+  size(600, 500);
   
-  synthetic = new World();
-  
+  initWorld();
 
 }
 
 void draw() {
-  background(0);
+  background(10);
+  synthetic.update();
   synthetic.display();
+}
+
+void initWorld() {
+  synthetic = new World();
+  
+  // Allows Agents to reach equilibrium before displaying
+  for(int i=0; i<500; i++) {
+    synthetic.update();
+  }
 }
 
 void keyPressed() {
   switch(key) {
     case 'r': // reset
-      synthetic = new World();
+      initWorld();
       break;
   }  
 }
