@@ -182,7 +182,7 @@ class World {
     // Draw Culture Legend
     int margin = 20;
     int top = 70;
-    int textSize = 12;
+    int textSize = 16;
     int cultureIndex;
     int circleDim = 10;
     textSize(textSize);
@@ -250,7 +250,7 @@ class World {
       String majorityCulture = worldCultures.get(worldNations.get(i).majorityCultureIndex).name;
       
       textAlign(CENTER, CENTER);
-      textSize(16);
+      textSize(20);
       fill(0);
       text(name, x+1, y+1);
       text(name, x-1, y-1);
