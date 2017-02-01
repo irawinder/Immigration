@@ -15,6 +15,8 @@
  *
  */
 
+float particleVelocity = 1;
+
 String[] cultureNames = {
   "Xenu",
   "Delta",
@@ -62,8 +64,9 @@ class World {
   
   
   // Display Parameters
-  ArrayList<PVector> loc;
+  ArrayList<PVector> loc, nameLoc;
   ArrayList<Integer> hue;
+  float innerCircle, outerCircle;
   
   World() {
     setupWorld();
@@ -71,8 +74,8 @@ class World {
   }
   
   void setupWorld() {
-    int numCultures = int(random(3, 5));
-    int numNations = int(random(5, nationNames.length+1));
+    int numCultures = int(random(3, 6));
+    int numNations = int(random(3, nationNames.length+1));
     
     worldCultures = new ArrayList<Culture>();
     for (int i=0; i<numCultures; i++) {
@@ -99,14 +102,23 @@ class World {
   }
   
   void setupCanvas() {
+    innerCircle = 0.25;
+    outerCircle = 0.32;
+    
     loc = new ArrayList<PVector>();
+    nameLoc = new ArrayList<PVector>();
+    float x,y, angle;
     for (int i=0; i<worldNations.size(); i++) {
-      float angle = i*(2.0*PI)/worldNations.size();
-      float x = width - 0.5*height + (0.3*height)*sin(angle);
-      float y = 0.5*height - (0.3*height)*cos(angle);
+      angle = i*(2.0*PI)/worldNations.size();
+      x = width - 0.5*height + (innerCircle*height)*sin(angle);
+      y = 0.5*height - (innerCircle*height)*cos(angle);
       loc.add(new PVector(x, y));
       
-      int area = 20;
+      x = width - 0.5*height + (outerCircle*height)*sin(angle);
+      y = 0.5*height - (outerCircle*height)*cos(angle);
+      nameLoc.add(new PVector(x, y));
+      
+      int area = 100;
       for(int j=0; j<worldNations.get(i).citizens.size(); j++) {
         worldNations.get(i).citizens.get(j).setLocation(int(x + area*sin(random(0, 2*PI))), int(y + area*cos(random(0, 2*PI))));
       }
@@ -169,46 +181,82 @@ class World {
     
     // Draw Culture Legend
     int margin = 20;
+    int top = 70;
     int textSize = 12;
     int cultureIndex;
+    int circleDim = 10;
     textSize(textSize);
     textAlign(LEFT, CENTER);
+    
+    fill(255);
+    text("1 million people", 30 + margin, top + margin);
+    fill(255);
+    ellipse(margin + 4, top + margin + 1, circleDim, circleDim);
+    
+    fill(255);
+    text("Immigrant", 30 + margin, 1.75*2*textSize + top + margin);
+    noFill();
+    stroke(255);
+    strokeWeight(2);
+    ellipse(margin + 4, 1.75*2*textSize + top + margin + 1, circleDim, circleDim);
+    noStroke();
+    
+    fill(255);
+    text("Native", 30 + margin, 1.75*3*textSize + top + margin);
+    fill(150);
+    ellipse(margin + 4, 1.75*3*textSize + top + margin + 1, circleDim, circleDim);
+    
     for (int i=0; i<worldCultures.size(); i++) {
       fill(255);
-      text(worldCultures.get(i).name, 30 + margin, 70 + margin + 1.75*i*textSize);
+      text(worldCultures.get(i).name, 30 + margin, 1.75*5*textSize + top + margin + 1.75*i*textSize);
       
       cultureIndex = worldCultures.get(i).index;
-      fill(hue.get(cultureIndex), 200, 255, 200);
-      ellipse(margin, 70 + margin + 1.75*i*textSize, 8, 8);
+      fill(hue.get(cultureIndex), 200, 255, 255);
+      ellipse(margin + 4, 1.75*5*textSize + top + margin + 1.75*i*textSize + 1, circleDim, circleDim);
     }
-      
+
+    // Draw Large Circle
+    stroke(20);
+    strokeWeight(50);
+    noFill();
+    ellipse(width - 0.5*height, 0.5*height, 2*innerCircle*height, 2*innerCircle*height);
+    
     // Draw Nations w/ People
     for (int i=0; i<worldNations.size(); i++) {
       float x, y;
-      
+
       // Draw People
       noStroke();
       for (int j=0; j<worldNations.get(i).citizens.size(); j++) {
         cultureIndex = worldNations.get(i).citizens.get(j).culture.index;
-        fill(hue.get(cultureIndex), 200, 255, 150);
+        if (worldNations.get(i).citizens.get(j).immigrant) {
+          noFill();
+          stroke(hue.get(cultureIndex), 200, 255, 255);
+          strokeWeight(2);
+        } else {
+          noStroke();
+          fill(hue.get(cultureIndex), 200, 255, 255);
+        }
+        
         x = worldNations.get(i).citizens.get(j).loc.x;
         y = worldNations.get(i).citizens.get(j).loc.y;
-        ellipse(x, y, 8, 8);
+        ellipse(x, y, circleDim, circleDim);
       }
     
       // Draw Nation
-      x = loc.get(i).x;
-      y = loc.get(i).y;
+      x = nameLoc.get(i).x;
+      y = nameLoc.get(i).y;
       String name = worldNations.get(i).name;
       String majorityCulture = worldCultures.get(worldNations.get(i).majorityCultureIndex).name;
+      
       textAlign(CENTER, CENTER);
       textSize(16);
-      fill(0, 150);
+      fill(0);
       text(name, x+1, y+1);
       text(name, x-1, y-1);
       text(name, x+1, y-1);
       text(name, x-1, y+1);
-      fill(255, 200);
+      fill(255);
       text(name, x, y);
 //      text(name, x, y - 8);
 //      textSize(12);
@@ -366,9 +414,9 @@ class World {
     
     //Graphics/Display Parameters
     PVector acc, vel, loc;
-    float maxVel = 0.1;
-    int repelDist = 10;
-    float repelForce = 500;
+    int repelDist = 12;
+    float sinkForce = 0.5;
+    float repelForce = 10;
     float attractForce = 0.1;
     
     Persons(boolean immigrant, Culture culture) {
@@ -388,10 +436,10 @@ class World {
     void update(PVector sink, ArrayList<Persons> crowd) {
       
       // Apply Sink Force
-      PVector sinkForce = new PVector(sink.x, sink.y);
-      sinkForce.sub(loc);
-      sinkForce.setMag(0.5);
-      acc.set(sinkForce);
+      PVector sinkVector = new PVector(sink.x, sink.y);
+      sinkVector.sub(loc);
+      sinkVector.setMag(sinkForce);
+      acc.set(sinkVector);
       
       // Apply Attract and Repel Force
       PVector dist = new PVector();
@@ -399,7 +447,7 @@ class World {
         dist.x = loc.x;
         dist.y = loc.y;
         dist.sub(crowd.get(i).loc);
-        if (dist.mag() < repelDist && dist.mag() != 0) {
+        if (dist.mag() < repelDist) {
           dist.setMag(repelForce);
           acc.add(dist);
         }
@@ -413,12 +461,13 @@ class World {
       
       // Update Velocity, Caps Speed
       vel.add(acc);
-      if (vel.mag() > maxVel) {
-        vel.setMag(maxVel);
+      if (vel.mag() > particleVelocity) {
+        vel.setMag(particleVelocity);
       }
       
       // Updates Location
       loc.add(vel);
+      
     }
     
   } // End Persons
