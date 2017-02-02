@@ -14,6 +14,9 @@
  *  World -> Nation,  Culture, Persons
  *
  */
+ 
+// To Do:
+// - Enable a selective migration
 
 import java.util.*;
 
@@ -64,8 +67,11 @@ class World {
   // Display Parameters
   ArrayList<PVector> loc, nameLoc;
   ArrayList<Integer> hue;
-  float innerCircle, outerCircle;
-  float particleVelocity = 0.1;
+  float innerCircle = 0.25;
+  float outerCircle = 0.32; 
+  float standingVelocity = 0.2;
+  float migrantVelocity = 3.0;
+  int circleDim = 8;
   
   World() {
     setupWorld();
@@ -88,7 +94,7 @@ class World {
     }
     
     for (int i=0; i<worldNations.size(); i++) {
-      worldNations.get(i).randomSetup( int( sq( random(1,9) ) ) );
+      worldNations.get(i).randomSetup( int( sq( random(1,10) ) ) );
       worldNations.get(i).calculateStats();
     }
     
@@ -102,9 +108,6 @@ class World {
   }
   
   void setupCanvas() {
-    innerCircle = 0.25;
-    outerCircle = 0.32;
-    
     loc = new ArrayList<PVector>();
     nameLoc = new ArrayList<PVector>();
     float x,y, angle;
@@ -132,14 +135,15 @@ class World {
   }
   
   void preRun(int iterations) {
+    float holdValue = standingVelocity;
     // Pre-Run the script before displaying
-    particleVelocity = 10.0;
+    standingVelocity = 10.0;
     // Allows Agents to reach equilibrium before displaying
     for(int i=0; i<iterations; i++) {
-      particleVelocity -= 9.9 / iterations;
+      standingVelocity -= (standingVelocity - holdValue) / iterations;
       update();
     }
-    particleVelocity = 0.1;
+    standingVelocity = holdValue;
   }
     
   void calculateStats() {
@@ -194,13 +198,13 @@ class World {
     textAlign(RIGHT,TOP);
     textSize(16);
     text("Press 'r' to refresh", width-20, 20);
+    text("Press 'm' to migrate", width-20, 40);
     
     // Draw Culture Legend
     int margin = 20;
     int top = 140;
     int textSize = 16;
     int cultureIndex;
-    int circleDim = 10;
     textSize(textSize);
     textAlign(LEFT, CENTER);
     
@@ -232,7 +236,7 @@ class World {
     }
 
     // Draw Large Circle
-    stroke(20);
+    stroke(30);
     strokeWeight(50);
     noFill();
     ellipse(width - 0.5*height, 0.5*height, 2*innerCircle*height, 2*innerCircle*height);
@@ -248,7 +252,7 @@ class World {
         if (worldNations.get(i).citizens.get(j).immigrant) {
           noFill();
           stroke(hue.get(cultureIndex), 200, 255, 255);
-          strokeWeight(2);
+          strokeWeight(1);
         } else {
           noStroke();
           fill(hue.get(cultureIndex), 200, 255, 255);
@@ -426,18 +430,21 @@ class World {
   //  A culture integer specifies a group to which a Persons may belong.  This is purposefully ambiguous. 
   class Persons {
     boolean immigrant;
+    boolean migrating;
     Culture culture;
     
     //Graphics/Display Parameters
     PVector acc, vel, loc;
-    int repelDist = 12;
+    int repelDist = int(1.2*circleDim);
     float sinkForce = 0.5;
     float repelForce = 10;
     float attractForce = 0.1;
+    int migrationFrames = 0;
     
     Persons(boolean immigrant, Culture culture) {
       this.immigrant = immigrant;
       this.culture = culture;
+      migrating = false;
       
       acc = new PVector(0,0);
       vel = new PVector(0,0);
@@ -454,6 +461,11 @@ class World {
       // Apply Sink Force
       PVector sinkVector = new PVector(sink.x, sink.y);
       sinkVector.sub(loc);
+      
+      if (sinkVector.mag() < 5*circleDim) {
+        if (migrating) migrating = false;
+      }
+        
       sinkVector.setMag(sinkForce);
       acc.set(sinkVector);
       
@@ -463,7 +475,7 @@ class World {
         dist.x = loc.x;
         dist.y = loc.y;
         dist.sub(crowd.get(i).loc);
-        if (dist.mag() < repelDist) {
+        if (dist.mag() < repelDist && dist.mag() != 0) {
           dist.setMag(repelForce);
           acc.add(dist);
         }
@@ -473,12 +485,25 @@ class World {
         }
       }
       
-
+      // Determines whether still "migrating"
+      if (migrationFrames > 1) {
+        migrationFrames--;
+      } else if (migrationFrames == 1) {
+        migrationFrames--;
+        migrating = false;
+      }
       
       // Update Velocity, Caps Speed
       vel.add(acc);
-      if (vel.mag() > particleVelocity) {
-        vel.setMag(particleVelocity);
+      
+      if (migrating) {
+        if (vel.mag() > migrantVelocity) {
+          vel.setMag(migrantVelocity);
+        }
+      } else {
+        if (vel.mag() > standingVelocity) {
+          vel.setMag(standingVelocity);
+        }
       }
       
       // Updates Location
@@ -487,5 +512,20 @@ class World {
     }
     
   } // End Persons
+  
+  void migrate(int migrant, int originNation, int newNation) {
+    if (originNation < worldNations.size() && newNation < worldNations.size() && originNation != newNation) {
+      if (migrant < worldNations.get(originNation).citizens.size()) {
+        // Copies Persons to new Nation with immigrant status set to true
+        Persons immigrant = worldNations.get(originNation).citizens.get(migrant);
+        immigrant.immigrant = true;
+        immigrant.migrating = true;
+        immigrant.migrationFrames = int(500/migrantVelocity);
+        worldNations.get(newNation).citizens.add(worldNations.get(originNation).citizens.get(migrant));
+        // Removes Persons from origin Nation
+        worldNations.get(originNation).citizens.remove(migrant);
+      }
+    }
+  }
 
 }
