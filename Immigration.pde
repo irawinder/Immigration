@@ -13,7 +13,7 @@ int runTime = 0;
 
 void draw() {
   
-  background(0);
+  background(30);
   synthetic.update();
   synthetic.display();
   

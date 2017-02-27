@@ -429,7 +429,7 @@ class World {
     }
     
     // Draw Large Circle
-    stroke(30);
+    stroke(60);
     strokeWeight(50);
     noFill();
     ellipse(width - 0.55*height, 0.5*height, 2*innerCircle*height, 2*innerCircle*height);
