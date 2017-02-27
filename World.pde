@@ -394,7 +394,7 @@ class World {
     
     textAlign(LEFT,TOP);
     text("Press 'r' to refresh", width-200, 20);
-    text("Press 'n' to next data", width-200, 40);
+    text("Press 'n' for next data", width-200, 40);
     text("Press 'm' to migrate", width-200, 60);
     
     textAlign(LEFT, CENTER);
