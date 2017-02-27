@@ -1,5 +1,5 @@
 World synthetic;
-String worldType = "RANDOM";
+String worldType = "UN_REGIONS";
 
 void setup() {
   size(1200, 900);

@@ -647,7 +647,7 @@ class World {
     //Graphics/Display Parameters
     PVector acc, vel, loc;
     int repelDist = int(1.2*circleDim);
-    float sinkForce = 0.5;
+    float sinkForce = 5;
     float repelForce = 100;
     float attractForce = 0.1;
     int migrationFrames = 0;
