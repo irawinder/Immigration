@@ -1,8 +1,9 @@
 World synthetic;
+String worldType = "RANDOM";
 
 void setup() {
-  size(1200, 1000);
-  synthetic = new World();
+  size(1200, 900);
+  synthetic = new World(worldType);
   runTime = 1000;
 }
 
@@ -26,15 +27,30 @@ void draw() {
 void keyPressed() {
   switch(key) {
     case 'r': // reset
-      synthetic = new World();
+      synthetic = new World(worldType);
+      runTime = 1000;
+      loop();
+      break;
+    case 'n': // next type
+      if (worldType.equals("RANDOM")) {
+        worldType = "UN_CONTINENTS";
+      } else if (worldType.equals("UN_CONTINENTS")) {
+        worldType = "UN_REGIONS";
+      } else if (worldType.equals("UN_REGIONS")) {
+        worldType = "UN_NATIONS";
+      } else if (worldType.equals("UN_NATIONS")) {
+        worldType = "RANDOM";
+      }
+      
+      synthetic = new World(worldType);
       runTime = 1000;
       loop();
       break;
     case 'm': // migrate
       int origin, destination;
       for (int i=0; i<25; i++) {
-        origin = int(random(0,10));
-        destination = int(random(0,10));
+        origin = int(random(0, synthetic.worldNations.size() ));
+        destination = int(random(0, synthetic.worldNations.size() ));
         synthetic.migrate(0, origin, destination);
       }
       runTime = 1000;
