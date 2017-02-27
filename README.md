@@ -1,7 +1,8 @@
 # Immigration
 A Visualization Framework to test immigration policy among synthetic nation-states
 
-![Screenshot](processPNGs/Viz4.png "Screenshot")
+![Mock Data](processPNGs/Viz4.png "Mock Data")
+![UN Data](processPNGs/Viz5.png "UN Data")
 
 Directions:
 
